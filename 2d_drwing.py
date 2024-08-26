@@ -15,6 +15,7 @@ prev_x, prev_y = None, None
 drawing = False
 current_color = (0, 0, 0)  # Default color is black
 brush_thickness = 5
+eraser_thickness = 20  # Increased thickness for eraser
 canvas = None  # Initialize the canvas as None
 
 # Colors list and color palette positions
@@ -26,6 +27,10 @@ color_index = 0
 last_toggle_time = 0
 gesture_timeout = 1  # Time in seconds to debounce the gesture detection
 color_change_timeout = 2  # Time in seconds to debounce color change
+
+# Create a named window and set it to fullscreen
+cv2.namedWindow("2D Paint", cv2.WND_PROP_FULLSCREEN)
+cv2.setWindowProperty("2D Paint", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
 while True:
     # Capture frame from webcam
@@ -68,10 +73,6 @@ while True:
             # Calculate distance between thumb and index finger
             distance = np.hypot(x - thumb_x, y - thumb_y)
 
-            # Calculate angle between thumb and index finger
-            angle = np.arctan2(y - thumb_y, x - thumb_x) * 180 / np.pi
-            angle = angle % 360
-
             # Check if the index finger and thumb are close enough to consider it a clicking gesture
             current_time = cv2.getTickCount() / cv2.getTickFrequency()
             if distance < 40 and (current_time - last_toggle_time) > gesture_timeout:
@@ -81,7 +82,8 @@ while True:
 
             # If in drawing mode and previous coordinates exist, draw a line between previous and current points
             if drawing and prev_x is not None and prev_y is not None:
-                cv2.line(canvas, (prev_x, prev_y), (x, y), current_color, brush_thickness)
+                thickness = eraser_thickness if current_color == (255, 255, 255) else brush_thickness
+                cv2.line(canvas, (prev_x, prev_y), (x, y), current_color, thickness)
 
             # Update the previous coordinates
             prev_x, prev_y = x, y
